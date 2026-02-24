@@ -1,5 +1,7 @@
 import type { Config } from "@puckeditor/core";
 
+import { Section } from "@/components/blocks/Section";
+
 export const puckConfig: Config = {
     root: {
         fields: {
@@ -43,14 +45,22 @@ export const puckConfig: Config = {
                         { label: "Right", value: "text-right" },
                     ],
                 },
+                colorText: {
+                    type: "select",
+                    options: [
+                        { label: "Color1", value: "text-black" },
+                        { label: "Color2", value: "text-white" }
+                    ],
+                },
             },
             defaultProps: {
                 title: "Hello from Puck",
                 size: "text-4xl",
                 align: "text-left",
+                colorText: "text-black",
             },
-            render: ({ title, size, align }) => (
-                <h1 className={`${size} ${align} font-bold`}>{title}</h1>
+            render: ({ title, size, align, colorText }) => (
+                <h1 className={`${size} ${align} ${colorText} font-bold`}>{title}</h1>
             ),
         },
 
@@ -98,11 +108,19 @@ export const puckConfig: Config = {
         TextBlock: {
             fields: {
                 text: { type: "textarea" },
+                colorText: {
+                    type: "select",
+                    options: [
+                        { label: "Color1", value: "text-black" },
+                        { label: "Color2", value: "text-white" }
+                    ],
+                },
             },
             defaultProps: {
                 text: "This is a text block.",
+                colorText: "text-black",
             },
-            render: ({ text }) => <p className="text-base leading-7">{text}</p>,
+            render: ({ text, colorText }) => <p className={`text-base leading-7 ${colorText}`}>{text}</p>,
         },
 
         ButtonBlock: {
@@ -168,7 +186,7 @@ export const puckConfig: Config = {
                 );
             },
         },
-
+        Section
 
     },
 };

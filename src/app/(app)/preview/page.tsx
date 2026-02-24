@@ -30,7 +30,7 @@ export default function PreviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8 space-y-6">
+    <div>
       <Render config={puckConfig} data={data} />
     </div>
   );

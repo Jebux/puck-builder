@@ -14,7 +14,7 @@ export const initialData: Data = {
     {
       type: "HeadingBlock",
       props: {
-        id: "HeadingBlock-1",
+        id: "HeadingBlock-2",
         title: "Home",
         size: "text-4xl",
         align: "text-left",
