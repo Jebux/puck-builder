@@ -2,7 +2,13 @@ import type { Config } from "@puckeditor/core";
 
 import { Section } from "@/components/blocks/Section";
 
+
 export const puckConfig: Config = {
+    categories: {
+        text: { components: ["HeadingBlock", "TextBlock"] },
+        layout: { components: ["GridBlock", "Section"] },
+        widgets: { components: ["ButtonBlock"] },
+    },
     root: {
         fields: {
             id: { type: "text" },
@@ -27,7 +33,9 @@ export const puckConfig: Config = {
 
     components: {
         HeadingBlock: {
+            label: "Heading",
             fields: {
+                idTxt: { type: "text" },
                 title: { type: "text" },
                 size: {
                     type: "select",
@@ -54,6 +62,7 @@ export const puckConfig: Config = {
                 },
             },
             defaultProps: {
+                idTxt: "heading-1",
                 title: "Hello from Puck",
                 size: "text-4xl",
                 align: "text-left",
@@ -65,6 +74,7 @@ export const puckConfig: Config = {
         },
 
         GridBlock: {
+            label: "Grid",
             fields: {
                 cols: {
                     type: "select",

@@ -1,11 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import "@puckeditor/core/puck.css";
+import { useState } from "react";
 
+import "@puckeditor/core/puck.css";
 import { puckConfig } from "@/puck/config";
 import { initialData } from "@/puck/initialData";
-import type { Data } from "@puckeditor/core";
+
+import type { Data, Plugin } from "@puckeditor/core";
+
+import { templatesPlugin } from "@/puck/plugins/templatePlugin";
+import { textModifierPlugin } from "@/puck/plugins/textModifierPlugin";
+
+type EditorData = Data<typeof puckConfig>;
+type EditorConfig = typeof puckConfig;
+
 
 const ALLOWED_ROOT_KEYS = new Set([
   "id",
@@ -14,48 +23,68 @@ const ALLOWED_ROOT_KEYS = new Set([
   "groups",
 ]);
 
-export function cleanRoot(data: Data): Data {
+export function cleanRoot(data: EditorData): EditorData {
   const cleaned = structuredClone(data);
-
-  // root.props es dinámico, lo tratamos como diccionario
   const props = cleaned.root?.props as Record<string, unknown> | undefined;
   if (!props) return cleaned;
 
   for (const key of Object.keys(props)) {
-    if (!ALLOWED_ROOT_KEYS.has(key)) {
-      delete props[key];
-    }
+    if (!ALLOWED_ROOT_KEYS.has(key)) delete props[key];
   }
 
   return cleaned;
 }
 
-
-const Puck = dynamic(() => import("@puckeditor/core").then((m) => m.Puck), {
-    ssr: false,
-});
+const Puck = dynamic(
+  () =>
+    import("@puckeditor/core").then((mod) => {
+      return mod.Puck as unknown as React.ComponentType<{
+        config: EditorConfig;
+        data: EditorData;
+        onChange?: (data: EditorData) => void;
+        onPublish?: (data: EditorData) => void;
+        headerTitle?: string;
+        plugins?: Plugin<EditorConfig>[];
+      }>;
+    }),
+  { ssr: false }
+);
 
 const STORAGE_KEY = "puck:data";
 
 export default function EditorPage() {
-    const saved =
-        typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
+  const [data, setData] = useState<EditorData>(() => {
+    if (typeof window === "undefined") return initialData as EditorData;
 
-    const data = saved ? JSON.parse(saved) : initialData;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return initialData as EditorData;
 
-    return (
-        <Puck
-            config={puckConfig}
-            data={data}
-            headerTitle="Page Builder"
-            onPublish={(nextData) => {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanRoot(nextData)));
-            }}
-            onChange={(nextData) => {
-                // opcional: autosave
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanRoot(nextData)));
+    try {
+      return JSON.parse(raw) as EditorData;
+    } catch {
+      return initialData as EditorData;
+    }
+  });
 
-            }}
-        />
-    );
+  console.log("Editor render with data:", data);
+
+  return (
+    <Puck
+      config={puckConfig}
+      data={data}
+      headerTitle="Page Builder"
+      onChange={(next) => setData(next as EditorData)}
+      onPublish={(next) => {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(cleanRoot(next as EditorData))
+        );
+      }}
+      plugins={[
+    templatesPlugin((next) => setData(next as EditorData)), 
+    textModifierPlugin(data as any, (next) => setData(next as EditorData))
+  ]}
+      
+    />
+  );
 }
