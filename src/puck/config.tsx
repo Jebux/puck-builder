@@ -1,11 +1,12 @@
 import type { Config } from "@puckeditor/core";
 
 import { Section } from "@/components/blocks/Section";
+import { HeadingBlock_test } from "@/components/blocks/HeadingBlock";
 
 
 export const puckConfig: Config = {
     categories: {
-        text: { components: ["HeadingBlock", "TextBlock"] },
+        text: { components: ["HeadingBlock", "HeadingBlock_test", "TextBlock"] },
         layout: { components: ["GridBlock", "Section"] },
         widgets: { components: ["ButtonBlock"] },
     },
@@ -32,10 +33,10 @@ export const puckConfig: Config = {
     },
 
     components: {
+
         HeadingBlock: {
             label: "Heading",
             fields: {
-                idTxt: { type: "text" },
                 title: { type: "text" },
                 size: {
                     type: "select",
@@ -62,7 +63,6 @@ export const puckConfig: Config = {
                 },
             },
             defaultProps: {
-                idTxt: "heading-1",
                 title: "Hello from Puck",
                 size: "text-4xl",
                 align: "text-left",
@@ -196,7 +196,8 @@ export const puckConfig: Config = {
                 );
             },
         },
-        Section
+        Section,
+        HeadingBlock_test,
 
     },
 };

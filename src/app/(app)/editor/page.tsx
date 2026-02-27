@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import "@puckeditor/core/puck.css";
 import { puckConfig } from "@/puck/config";
@@ -9,19 +9,13 @@ import { initialData } from "@/puck/initialData";
 
 import type { Data, Plugin } from "@puckeditor/core";
 
-import { templatesPlugin } from "@/puck/plugins/templatePlugin";
-import { textModifierPlugin } from "@/puck/plugins/textModifierPlugin";
+import { ContentProvider, useContent } from "@/providers/BlocksContext";
+import { refineContentModel } from "@/utils/puck/refineContent";
 
 type EditorData = Data<typeof puckConfig>;
 type EditorConfig = typeof puckConfig;
 
-
-const ALLOWED_ROOT_KEYS = new Set([
-  "id",
-  "templateName",
-  "templateKeyName",
-  "groups",
-]);
+const ALLOWED_ROOT_KEYS = new Set(["id", "templateName", "templateKeyName", "groups"]);
 
 export function cleanRoot(data: EditorData): EditorData {
   const cleaned = structuredClone(data);
@@ -50,9 +44,12 @@ const Puck = dynamic(
   { ssr: false }
 );
 
-const STORAGE_KEY = "puck:data";
+const STORAGE_KEY = "puck:template";
+const CONTENT_KEY = "puck:content";
 
-export default function EditorPage() {
+function EditorInner() {
+  const { content, setContent } = useContent();
+
   const [data, setData] = useState<EditorData>(() => {
     if (typeof window === "undefined") return initialData as EditorData;
 
@@ -66,25 +63,42 @@ export default function EditorPage() {
     }
   });
 
-  console.log("Editor render with data:", data);
+  // (Opcional) cargar contentModel persistido
+  React.useEffect(() => {
+    const raw = localStorage.getItem(CONTENT_KEY);
+    if (!raw) return;
+    try {
+      setContent(JSON.parse(raw));
+    } catch {}
+  }, [setContent]);
 
   return (
     <Puck
       config={puckConfig}
       data={data}
       headerTitle="Page Builder"
-      onChange={(next) => setData(next as EditorData)}
+      onChange={(next) => setData(next)}
       onPublish={(next) => {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(cleanRoot(next as EditorData))
-        );
+        const cleanedLayout = cleanRoot(next);
+
+        // ✅ Aquí limpiamos el contentModel en base al layout publicado
+        const cleanedContent = refineContentModel(cleanedLayout, content);
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLayout));
+        localStorage.setItem(CONTENT_KEY, JSON.stringify(cleanedContent));
+
+        // Si quieres, también puedes sincronizar el context con el cleaned:
+        setContent(cleanedContent);
       }}
-      plugins={[
-    templatesPlugin((next) => setData(next as EditorData)), 
-    textModifierPlugin(data as any, (next) => setData(next as EditorData))
-  ]}
       
     />
+  );
+}
+
+export default function EditorPage() {
+  return (
+    <ContentProvider>
+      <EditorInner />
+    </ContentProvider>
   );
 }
